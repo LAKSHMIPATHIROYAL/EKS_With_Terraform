@@ -36,3 +36,25 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
+# 1. Internet Gateway (The "Door" to the internet)
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.main.id
+  tags   = { Name = "${var.cluster_name}-igw" }
+}
+
+# 2. Route Table (The "Map" for traffic)
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+  tags = { Name = "${var.cluster_name}-public-rt" }
+}
+
+# 3. Connect the Route Table to your Public Subnets
+resource "aws_route_table_association" "public" {
+  count          = 2
+  subnet_id      = aws_subnet.public[count.index].id
+  route_table_id = aws_route_table.public.id
+}
