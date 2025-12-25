@@ -17,3 +17,34 @@ resource "aws_eks_cluster" "main" {
   }
 }
 
+# The IAM Role itself
+resource "aws_iam_role" "eks_cluster_role" {
+  name = "${var.cluster_name}-role"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "eks.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+# Attaching the required AmazonEKSClusterPolicy
+resource "aws_iam_role_policy_attachment" "eks_cluster_AmazonEKSClusterPolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.eks_cluster_role.name
+}
+
+# Attaching the required AmazonEKSServicePolicy
+resource "aws_iam_role_policy_attachment" "eks_cluster_AmazonEKSServicePolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
+  role       = aws_iam_role.eks_cluster_role.name
+}
